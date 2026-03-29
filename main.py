@@ -5,6 +5,7 @@ from flask import request
 from flask import redirect
 from flask_session import Session
 from flask_cors import CORS
+from flask_talisman import Talisman
 import user_management as dbHandler
 from dotenv import load_dotenv
 from helpers import login_required
@@ -29,7 +30,13 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "dev-key-fallback-not-for-prod")
 
 Session(app)
+csp = {
+    'default-src': '\'self\'',
+    'script-src': '\'self\'',
+    'style-src': '\'self\''
+}
 
+Talisman(app, content_security_policy=csp, force_https=False)
 
 @app.route("/success.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
 @login_required
