@@ -14,7 +14,11 @@ from helpers import login_required
 load_dotenv()
 app = Flask(__name__)
 # Enable CORS to allow cross-origin requests (needed for CSRF demo in Codespaces)
-CORS(app)
+CORS(app, resources={"/*": {
+    "origins": ["http://127.0.0.1:500", "http://localhost:5000/"],
+    "methods": ["GET", "POST"],
+    "allow_headers": ["Content-Type"]
+}})
 
 # Secure session management
 app.config["SESSION_PERMANENT"] = False
@@ -92,4 +96,4 @@ def logout():
 if __name__ == "__main__":
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="127.0.0.1", port=5000)
