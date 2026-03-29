@@ -1,19 +1,34 @@
-from flask import Flask
+import os
+from flask import Flask, session
 from flask import render_template
 from flask import request
 from flask import redirect
+from flask_session import Session
 from flask_cors import CORS
 import user_management as dbHandler
+from dotenv import load_dotenv
+from helpers import login_required
 
 # Code snippet for logging a message
 # app.logger.critical("message")
-
+load_dotenv()
 app = Flask(__name__)
 # Enable CORS to allow cross-origin requests (needed for CSRF demo in Codespaces)
 CORS(app)
 
+# Secure session management
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "dev-key-fallback-not-for-prod")
+
+Session(app)
+
 
 @app.route("/success.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
+@login_required
 def addFeedback():
     if request.method == "GET" and request.args.get("url"):
         url = request.args.get("url", "")
@@ -28,6 +43,7 @@ def addFeedback():
 
 @app.route("/signup.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
 def signup():
+    session.clear()
     if request.method == "GET" and request.args.get("url"):
         url = request.args.get("url", "")
         return redirect(url, code=302)
@@ -44,6 +60,8 @@ def signup():
 @app.route("/index.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
 @app.route("/", methods=["POST", "GET"])
 def home():
+    # Log user out if logged in
+    session.clear()
     # Simple Dynamic menu
     if request.method == "GET" and request.args.get("url"):
         url = request.args.get("url", "")
@@ -57,6 +75,8 @@ def home():
         password = request.form["password"]
         isLoggedIn = dbHandler.retrieveUsers(username, password)
         if isLoggedIn:
+            user_id = dbHandler.retrieveUserId(username)
+            session["user_id"] = user_id
             all_feedback = dbHandler.listFeedback()
             return render_template("/success.html", feedback=all_feedback, value=username, state=isLoggedIn)
         else:
@@ -64,6 +84,10 @@ def home():
     else:
         return render_template("/index.html")
 
+@app.route("/logout", methods=["POST", "GET"])
+def logout():
+    session.clear()
+    return redirect("/")
 
 if __name__ == "__main__":
     app.config["TEMPLATES_AUTO_RELOAD"] = True

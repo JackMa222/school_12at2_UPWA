@@ -17,6 +17,16 @@ def insertUser(username, password, DoB):
     con.commit()
     con.close()
 
+def retrieveUserId(username):
+    con = sql.connect("database_files/database.db")
+    cur = con.cursor()
+    cur.execute(f"SELECT id FROM users WHERE username = ?", (username, ))
+    row = cur.fetchone()
+    if row == None:
+        con.close()
+        return False
+    return row[0]
+
 
 def retrieveUsers(username, password):
     con = sql.connect("database_files/database.db")
