@@ -1,3 +1,4 @@
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3 as sql
 import time
 import random
@@ -6,9 +7,12 @@ import random
 def insertUser(username, password, DoB):
     con = sql.connect("database_files/database.db")
     cur = con.cursor()
+    
+    hashed_password = generate_password_hash(password, method='scrypt')
+    
     cur.execute(
         "INSERT INTO users (username,password,dateOfBirth) VALUES (?,?,?)",
-        (username, password, DoB),
+        (username, hashed_password, DoB),
     )
     con.commit()
     con.close()
@@ -22,7 +26,9 @@ def retrieveUsers(username, password):
         con.close()
         return False
     else:
-        cur.execute(f"SELECT * FROM users WHERE password = ?", (password, ))
+        cur.execute(f"SELECT password FROM users WHERE username = ?", (username, ))
+        row = cur.fetchone()
+        con.close()
         # Plain text log of visitor count as requested by Unsecure PWA management
         with open("visitor_log.txt", "r") as file:
             number = int(file.read().strip())
@@ -31,12 +37,10 @@ def retrieveUsers(username, password):
             file.write(str(number))
         # Simulate response time of heavy app for testing purposes
         time.sleep(random.randint(80, 90) / 1000)
-        if cur.fetchone() == None:
-            con.close()
-            return False
-        else:
-            con.close()
-            return True
+        if row:
+            hashed_password = row[0]
+            return check_password_hash(hashed_password, password)
+        return False
 
 
 def insertFeedback(feedback):
