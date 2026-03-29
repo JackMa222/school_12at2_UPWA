@@ -1,11 +1,12 @@
 import os
-from flask import Flask, session
+from flask import Flask, session, url_for
 from flask import render_template
 from flask import request
 from flask import redirect
 from flask_session import Session
 from flask_cors import CORS
 from flask_talisman import Talisman
+from flask_wtf.csrf import CSRFProtect
 import user_management as dbHandler
 from dotenv import load_dotenv
 from helpers import login_required
@@ -16,13 +17,16 @@ load_dotenv()
 app = Flask(__name__)
 # Enable CORS to allow cross-origin requests (needed for CSRF demo in Codespaces)
 CORS(app, resources={"/*": {
-    "origins": ["http://127.0.0.1:500", "http://localhost:5000/"],
+    "origins": ["http://127.0.0.1:5000", "http://localhost:5000/"],
     "methods": ["GET", "POST"],
     "allow_headers": ["Content-Type"]
 }})
 
+csrf = CSRFProtect(app)
+
 @app.after_request
 def remove_server_info(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers.pop("Server", None)
     return response
 
@@ -41,14 +45,16 @@ csp = {
     'style-src': '\'self\''
 }
 
-Talisman(app, content_security_policy=csp, force_https=False)
+Talisman(app, content_security_policy=csp, force_https=False, frame_options='SAMEORIGIN')
 
 @app.route("/success.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
 @login_required
 def addFeedback():
     if request.method == "POST":
         feedback = request.form["feedback"]
-        dbHandler.insertFeedback(feedback)
+        if feedback:
+            dbHandler.insertFeedback(feedback)
+        return redirect(url_for('addFeedback'))
 
     all_feedback = dbHandler.listFeedback()
     return render_template("/success.html", feedback=all_feedback, state=True, value="Back")
