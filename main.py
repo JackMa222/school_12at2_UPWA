@@ -47,7 +47,7 @@ csp = {
 
 Talisman(app, content_security_policy=csp, force_https=False, frame_options='SAMEORIGIN')
 
-@app.route("/success.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
+@app.route("/success.html", methods=["POST", "GET"])
 @login_required
 def addFeedback():
     if request.method == "POST":
@@ -60,7 +60,7 @@ def addFeedback():
     return render_template("/success.html", feedback=all_feedback, state=True, value="Back")
 
 
-@app.route("/signup.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
+@app.route("/signup.html", methods=["POST", "GET"])
 def signup():
     session.clear()
     if request.method == "POST":
@@ -73,7 +73,7 @@ def signup():
         return render_template("/signup.html")
 
 
-@app.route("/index.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
+@app.route("/index.html", methods=["POST", "GET"])
 @app.route("/", methods=["POST", "GET"])
 def home():
     # Log user out if logged in
