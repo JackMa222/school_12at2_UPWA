@@ -17,11 +17,11 @@
             <img src="static\images\logo.svg" alt="The unsecure website logo." />
             <h1>The Unsecure PWA</h1>
             <ul class="topnav">
-                <li><a href="?url=/">Home</a></li>
-                <li><a href="?url=/signup.html">Signup</a></li>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('signup') }}">Signup</a></li>
                 {% if session.get('user_id') %}
-                <li><a href="?url=/success.html">Success</a></li>
-                <li><a href="?url=/">Logout</a></li>
+                <li><a href="{{ url_for('addFeedback') }}">Success</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% endif %}
             </ul>
         </nav>

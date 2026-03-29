@@ -46,9 +46,6 @@ Talisman(app, content_security_policy=csp, force_https=False)
 @app.route("/success.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
 @login_required
 def addFeedback():
-    if request.method == "GET" and request.args.get("url"):
-        url = request.args.get("url", "")
-        return redirect(url, code=302)
     if request.method == "POST":
         feedback = request.form["feedback"]
         dbHandler.insertFeedback(feedback)
@@ -60,9 +57,6 @@ def addFeedback():
 @app.route("/signup.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
 def signup():
     session.clear()
-    if request.method == "GET" and request.args.get("url"):
-        url = request.args.get("url", "")
-        return redirect(url, code=302)
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -78,12 +72,8 @@ def signup():
 def home():
     # Log user out if logged in
     session.clear()
-    # Simple Dynamic menu
-    if request.method == "GET" and request.args.get("url"):
-        url = request.args.get("url", "")
-        return redirect(url, code=302)
     # Pass message to front end
-    elif request.method == "GET":
+    if request.method == "GET":
         msg = request.args.get("msg", "")
         return render_template("/index.html", msg=msg)
     elif request.method == "POST":
