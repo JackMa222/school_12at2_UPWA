@@ -21,11 +21,9 @@ def addFeedback():
     if request.method == "POST":
         feedback = request.form["feedback"]
         dbHandler.insertFeedback(feedback)
-        dbHandler.listFeedback()
-        return render_template("/success.html", state=True, value="Back")
-    else:
-        dbHandler.listFeedback()
-        return render_template("/success.html", state=True, value="Back")
+
+    all_feedback = dbHandler.listFeedback()
+    return render_template("/success.html", feedback=all_feedback, state=True, value="Back")
 
 
 @app.route("/signup.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
@@ -59,8 +57,8 @@ def home():
         password = request.form["password"]
         isLoggedIn = dbHandler.retrieveUsers(username, password)
         if isLoggedIn:
-            dbHandler.listFeedback()
-            return render_template("/success.html", value=username, state=isLoggedIn)
+            all_feedback = dbHandler.listFeedback()
+            return render_template("/success.html", feedback=all_feedback, value=username, state=isLoggedIn)
         else:
             return render_template("/index.html")
     else:
