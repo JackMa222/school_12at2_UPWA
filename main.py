@@ -21,6 +21,11 @@ CORS(app, resources={"/*": {
     "allow_headers": ["Content-Type"]
 }})
 
+@app.after_request
+def remove_server_info(response):
+    response.headers.pop("Server", None)
+    return response
+
 # Secure session management
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"

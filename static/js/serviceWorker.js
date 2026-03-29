@@ -46,6 +46,15 @@ self.addEventListener("activate", function (evt) {
 });
 
 self.addEventListener("fetch", function (evt) {
+  const requestUrl = new URL(evt.request.url);
+
+  const isInternal = requestUrl.origin === self.location.origin;
+
+  if (!isInternal) {
+    console.warn("Blocked external fetch")
+    return;
+  }
+
   evt.respondWith(
     fetch(evt.request).catch(() => {
       return caches.open(CATALOGUE_ASSETS).then((cache) => {
