@@ -26,6 +26,8 @@ csrf = CSRFProtect(app)
 
 @app.after_request
 def remove_server_info(response):
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers.pop("Server", None)
     return response
@@ -45,7 +47,8 @@ csp = {
     'style-src': '\'self\''
 }
 
-Talisman(app, content_security_policy=csp, force_https=False, frame_options='SAMEORIGIN')
+# TODO make secure
+Talisman(app, content_security_policy=csp, strict_transport_security=False, force_https=False, frame_options='SAMEORIGIN')
 
 @app.route("/success.html", methods=["POST", "GET"])
 @login_required
@@ -89,8 +92,7 @@ def home():
         if isLoggedIn:
             user_id = dbHandler.retrieveUserId(username)
             session["user_id"] = user_id
-            all_feedback = dbHandler.listFeedback()
-            return render_template("/success.html", feedback=all_feedback, value=username, state=isLoggedIn)
+            return redirect(url_for('addFeedback'))
         else:
             return render_template("/index.html")
     else:
