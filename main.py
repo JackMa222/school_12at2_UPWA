@@ -11,6 +11,11 @@ import user_management as dbHandler
 from dotenv import load_dotenv
 from helpers import login_required
 
+import pyotp
+import pyqrcode
+import base64
+from io import BytesIO
+
 # Code snippet for logging a message
 # app.logger.critical("message")
 load_dotenv()
@@ -44,7 +49,8 @@ Session(app)
 csp = {
     'default-src': '\'self\'',
     'script-src': '\'self\'',
-    'style-src': '\'self\''
+    'style-src': '\'self\'',
+    'img-src': ['\'self\'', 'data:']
 }
 
 # TODO make secure
@@ -71,7 +77,9 @@ def signup():
         password = request.form["password"]
         DoB = request.form["dob"]
         if dbHandler.insertUser(username, password, DoB):
-            return render_template("/index.html")
+            user_id = dbHandler.retrieveUserId(username)
+            session["onboarding_user_id"] = user_id
+            return redirect(url_for('onboard_2fa'))
         else:
             return redirect(url_for('signup'))
     else:
@@ -93,8 +101,12 @@ def home():
         isLoggedIn = dbHandler.retrieveUsers(username, password)
         if isLoggedIn:
             user_id = dbHandler.retrieveUserId(username)
-            session["user_id"] = user_id
-            return redirect(url_for('addFeedback'))
+            if dbHandler.check_2fa_status(user_id):
+                session["pending_user_id"] = user_id
+                return redirect(url_for('verify_2fa'))
+            else:
+                session["onboarding_user_id"] = user_id
+                return redirect(url_for('onboard_2fa'))
         else:
             return render_template("/index.html")
     else:
@@ -104,6 +116,50 @@ def home():
 def logout():
     session.clear()
     return redirect("/")
+
+@app.route("/onboard_2fa", methods=["POST", "GET"])
+def onboard_2fa():
+    user_id = session.get("onboarding_user_id")
+    
+    secret = dbHandler.retrieve_2fa_secret(user_id)
+    username = dbHandler.retrieveUsername(user_id)
+    
+    totp = pyotp.TOTP(secret)
+    uri = totp.provisioning_uri(name=username, issuer_name="Unsecure-PWA-Company")
+    
+    url = pyqrcode.create(uri)
+    stream = BytesIO()
+    url.png(stream, scale=5)
+    qr_b64 = base64.b64encode(stream.getvalue()).decode("utf-8")
+    
+    return render_template("onboard_2fa.html", qr_code=qr_b64, secret=secret)
+    
+@app.route("/verify_2fa", methods=["POST", "GET"])
+def verify_2fa():
+    user_id = session.get("pending_user_id") or session.get("onboarding_user_id")
+    if not user_id:
+        return redirect(url_for("home"))
+    
+    if request.method == "POST":
+        otp_token = request.form.get("otp_token")       
+        secret = dbHandler.retrieve_2fa_secret(user_id)
+        
+        totp = pyotp.TOTP(secret)
+        if totp.verify(otp_token):
+            session["user_id"] = user_id
+            
+            if "onboarding_user_id" in session:
+                dbHandler.complete_2fa_setup(user_id)
+            
+            session.pop("onboarding_user_id", None)
+            session.pop("pending_user_id", None)
+            
+            return redirect(url_for("addFeedback"))
+        else:
+            return render_template("verify_2fa.html")
+        
+    return render_template("verify_2fa.html")
+    
 
 if __name__ == "__main__":
     app.config["TEMPLATES_AUTO_RELOAD"] = True

@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h1>Onboard 2FA</h1>
+<h3>To use this platform you must setup 2FA and verify each time you login.</h3>
+<p>Scan the QR code below with <strong>Google Authenticator</strong> or <strong>Microsoft Authenticator</strong>.</p>
+
+<div>
+    <img src="data:image/png;base64,{{ qr_code }}" alt="2FA QR Code">
+</div>
+<p>Manual Secret: <code>{{ secret }}</code></p>
+
+<hr>
+
+<form action="{{ url_for('verify_2fa')}}" method="POST" class="form-group m-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <p>Once scanned, enter the 6-digit code from your device to verify:</p>
+    <input class="input__field m-2" type="text" name="otp_token" maxlength="6" required autofocus>
+    <br>
+    <button class="btn m-2" type="submit">Verify and Complete Setup</button>
+</form>
+
+{% endblock %}

@@ -1,8 +1,35 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3 as sql
-import time
-import random
 
+import pyotp
+
+def complete_2fa_setup(user_id):
+    con = sql.connect("database_files/database.db")
+    cur = con.cursor()
+    cur.execute("UPDATE users SET is_2fa_completed = 1 WHERE id = ?", (user_id, ))
+    con.commit()
+    con.close()
+    
+def check_2fa_status(user_id):
+    con = sql.connect("database_files/database.db")
+    cur = con.cursor()
+    cur.execute("SELECT is_2fa_completed FROM users WHERE id = ?", (user_id, ))
+    row = cur.fetchone()
+    con.close()
+    return row[0] == 1 if row else False
+
+def generate_2fa_secret():
+    return pyotp.random_base32()
+
+def retrieve_2fa_secret(user_id):
+    con = sql.connect("database_files/database.db")
+    cur = con.cursor()
+    
+    cur.execute("SELECT otpsalt FROM users WHERE id = ?", (user_id, ))
+    row = cur.fetchone()
+    con.close()
+    
+    return row[0] if row else None
 
 def insertUser(username, password, DoB):
     con = sql.connect("database_files/database.db")
@@ -14,10 +41,11 @@ def insertUser(username, password, DoB):
         return False
     
     hashed_password = generate_password_hash(password, method='scrypt')
+    secret = generate_2fa_secret()
     
     cur.execute(
-        "INSERT INTO users (username,password,dateOfBirth) VALUES (?,?,?)",
-        (username, hashed_password, DoB),
+        "INSERT INTO users (username,password,dateOfBirth,otpsalt) VALUES (?,?,?, ?)",
+        (username, hashed_password, DoB, secret),
     )
     con.commit()
     con.close()
@@ -32,6 +60,13 @@ def retrieveUserId(username):
         con.close()
         return False
     return row[0]
+
+def retrieveUsername(user_id):
+    con = sql.connect("database_files/database.db")
+    cur = con.cursor()
+    cur.execute(f"SELECT username FROM users WHERE id = ?", (user_id, ))
+    row = cur.fetchone()
+    return row[0] if row else "Unknown"
 
 
 def retrieveUsers(username, password):

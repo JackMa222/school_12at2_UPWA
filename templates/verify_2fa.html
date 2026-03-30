@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h1>Two-Factor Authentication (2FA)</h1>
+
+<form action="{{ url_for('verify_2fa')}}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <p>Enter the 6-digit code from your authenticator device to verify:</p>
+    <input type="text" name="otp_token" maxlength="6" pattern="\d{6}" class="form-control" required autofocus>
+    <br>
+    <button type="submit" class="btn">Verify with 2FA</button>
+</form>
+
+{% endblock %}
