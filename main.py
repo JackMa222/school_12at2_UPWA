@@ -70,8 +70,10 @@ def signup():
         username = request.form["username"]
         password = request.form["password"]
         DoB = request.form["dob"]
-        dbHandler.insertUser(username, password, DoB)
-        return render_template("/index.html")
+        if dbHandler.insertUser(username, password, DoB):
+            return render_template("/index.html")
+        else:
+            return redirect(url_for('signup'))
     else:
         return render_template("/signup.html")
 

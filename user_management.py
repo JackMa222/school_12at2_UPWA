@@ -8,6 +8,11 @@ def insertUser(username, password, DoB):
     con = sql.connect("database_files/database.db")
     cur = con.cursor()
     
+    cur.execute("SELECT id FROM users WHERE username = ?", (username, ))
+    if cur.fetchone():
+        con.close()
+        return False
+    
     hashed_password = generate_password_hash(password, method='scrypt')
     
     cur.execute(
@@ -16,6 +21,7 @@ def insertUser(username, password, DoB):
     )
     con.commit()
     con.close()
+    return True
 
 def retrieveUserId(username):
     con = sql.connect("database_files/database.db")
