@@ -40,6 +40,9 @@ def insertUser(username, password, DoB):
         con.close()
         return False
     
+    if len(username) > 12:
+        return False
+    
     hashed_password = generate_password_hash(password, method='scrypt')
     secret = generate_2fa_secret()
     
