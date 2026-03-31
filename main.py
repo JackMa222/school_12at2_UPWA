@@ -53,7 +53,6 @@ csp = {
     'img-src': ['\'self\'', 'data:']
 }
 
-# TODO make secure
 Talisman(app, content_security_policy=csp, strict_transport_security=False, force_https=False, frame_options='SAMEORIGIN')
 
 @app.route("/success.html", methods=["POST", "GET"])
