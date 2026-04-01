@@ -163,4 +163,4 @@ def verify_2fa():
 if __name__ == "__main__":
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(debug=False, host="127.0.0.1", port=5000)
