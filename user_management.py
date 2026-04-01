@@ -1,5 +1,6 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3 as sql
+import fcntl
 
 import pyotp
 
@@ -91,11 +92,12 @@ def retrieveUsers(username, password):
     password_correct = check_password_hash(hashed_password, password)
     
     # Plain text log of visitor count as requested by Unsecure PWA management
-    with open("visitor_log.txt", "r") as file:
-        number = int(file.read().strip())
-        number += 1
-    with open("visitor_log.txt", "w") as file:
+    with open("visitor_log.txt", "r+") as file:
+        fcntl.flock(file, fcntl.LOCK_EX)
+        number = int(file.read().strip()) + 1
+        file.seek(0)
         file.write(str(number))
+        file.truncate()
 
     return user_exists and password_correct
 
